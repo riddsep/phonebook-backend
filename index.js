@@ -26,6 +26,15 @@ let persons = [
   },
 ];
 
+app.get("/info", (request, response) => {
+  response.send(
+    `
+      <p>Phonebook has info for ${persons.length} people</p>
+      <p>${new Date()}</p>
+    `
+  );
+});
+
 app.get("/", (request, response) => {
   response.send("<h1>Hello world</h1>");
 });
@@ -52,25 +61,31 @@ app.delete("/api/persons/:id", (request, response) => {
 
 const generateId = () => {
   const maxId =
-    notes.length > 0 ? Math.max(...notes.map((n) => Number(n.id))) : 0;
+    persons.length > 0 ? Math.max(...persons.map((n) => Number(n.id))) : 0;
   return String(maxId + 1);
 };
 
 app.post("/api/persons", (request, response) => {
   const body = request.body;
+  console.log(body);
 
-  if (!body.content) {
-    return response.status(404).json({
-      error: "content missing",
+  if (!body.name || !body.number) {
+    return response.status(400).json({
+      error: "name or number is missing",
     });
   }
+
+  const uniqueName = persons.find((person) => person.name.includes(body.name));
+  if (uniqueName)
+    return response.status(400).json({ error: "name must unique" });
+
   const person = {
-    content: body.content,
-    important: Boolean(body.important) || false,
     id: generateId(),
+    name: body.name,
+    number: body.number,
   };
 
-  person = persons.concat(person);
+  persons = persons.concat(person);
   response.json(person);
 });
 
